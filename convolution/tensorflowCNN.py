@@ -155,15 +155,15 @@ def build_cnn():
 
     ## Dropout
     keep_prob = tf.placeholder(tf.float32, name='fc_keep_prob')
-    h3_drop = tf.nn.dropout(h3, keep_prob=keep_prob,name='dropout_layer')
+    h3_drop = tf.nn.dropout(h3, keep_prob=keep_prob, name='dropout_layer')
 
     ## 4th layer: Fully Connected (linear activation)
     print('\nBuilding 4th layer:')
-    h4 = fc_layer(h3_drop, name='fc_4',n_output_units=10,activation_fn=None)
+    h4 = fc_layer(h3_drop, name='fc_4', n_output_units=10, activation_fn=None)
 
     ## Prediction
-    predictions = {'probabilities': tf.nn.softmax(h4, name='probabilities'),
-                    'labels': tf.cast(tf.argmax(h4, axis=1), tf.int32,name='labels')}
+    predictions = {'probabilities': tf.nn.softmax(h4, name='probabilities'),
+                    'labels': tf.cast(tf.argmax(h4, axis=1), tf.int32, name='labels')}
 
     ## Visualize the graph with TensorBoard:
     ## Loss Function and Optimization
@@ -172,24 +172,23 @@ def build_cnn():
                                         name='cross_entropy_loss')
     ## Optimizer:
     optimizer = tf.train.AdamOptimizer(learning_rate)
-    optimizer = optimizer.minimize(cross_entropy_loss,name='train_op')
+    optimizer = optimizer.minimize(cross_entropy_loss, name='train_op')
 
     ## Computing the prediction accuracy
-    correct_predictions = tf.equal(predictions['labels'],tf_y, name='correct_preds')
-    accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32),name='accuracy')
+    correct_predictions = tf.equal(predictions['labels'], tf_y, name='correct_preds')
+    accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32), name='accuracy')
     
 def save(saver, sess, epoch, path='./model/'):
     if not os.path.isdir(path):
         os.makedirs(path)
     print('Saving model in %s' % path)
-    saver.save(sess, os.path.join(path,'cnn-model.ckpt'),global_step=epoch)
+    saver.save(sess, os.path.join(path,'cnn-model.ckpt'), global_step=epoch)
 
 def load(saver, sess, path, epoch):
     print('Loading model from %s' % path)
-    saver.restore(sess, os.path.join(path, 'cnn-model.ckpt-%d' % epoch))
+    saver.restore(sess, os.path.join(path, 'cnn-model.ckpt-%d' % epoch))
 
-def train(sess, training_set, validation_set=None,initialize=True, epochs=20, shuffle=True,
-          dropout=0.5, random_seed=None):
+def train(sess, training_set, validation_set=None, initialize=True, epochs=20, shuffle=True, dropout=0.5, random_seed=None):
     X_data = np.array(training_set[0])
     y_data = np.array(training_set[1])
     training_loss = []
@@ -203,20 +202,20 @@ def train(sess, training_set, validation_set=None,initialize=True, epochs=20, s
         batch_gen = batch_generator(X_data, y_data, shuffle=shuffle)
         avg_loss = 0.0
         for i,(batch_x,batch_y) in enumerate(batch_gen):
-            feed = {'tf_x:0': batch_x,'tf_y:0': batch_y,'fc_keep_prob:0': dropout}
-            loss, _ = sess.run(['cross_entropy_loss:0', 'train_op'],feed_dict=feed)
+            feed = {'tf_x:0': batch_x, 'tf_y:0': batch_y, 'fc_keep_prob:0': dropout}
+            loss, _ = sess.run(['cross_entropy_loss:0', 'train_op'], feed_dict=feed)
             avg_loss += loss
         training_loss.append(avg_loss / (i+1))
-        print('Epoch %02d Training Avg. Loss: %7.3f' % (epoch, avg_loss), end=' ')
+        print('Epoch %02d Training Avg. Loss: %7.3f' % (epoch, avg_loss), end=' ')
         if validation_set is not None:
-            feed = {'tf_x:0': validation_set[0],'tf_y:0': validation_set[1],'fc_keep_prob:0': 1.0}
+            feed = {'tf_x:0': validation_set[0], 'tf_y:0': validation_set[1],'fc_keep_prob:0': 1.0}
             valid_acc = sess.run('accuracy:0', feed_dict=feed)
             print(' Validation Acc: %7.3f' % valid_acc)
         else:
             print()
 
 def predict(sess, X_test, return_proba=False):
-    feed = {'tf_x:0': X_test,'fc_keep_prob:0': 1.0}
+    feed = {'tf_x:0': X_test, 'fc_keep_prob:0': 1.0}
     if return_proba:
         return sess.run('probabilities:0', feed_dict=feed)
     else:
@@ -225,7 +224,7 @@ def predict(sess, X_test, return_proba=False):
 ## Define hyperparameters
 learning_rate = 1e-4
 random_seed = 123
-'''
+
 ## Create a graph
 g = tf.Graph()
 with g.as_default():
@@ -239,16 +238,14 @@ with g.as_default():
 
 ## create a TF session and train the CNN model
 with tf.Session(graph=g) as sess:
-    train(sess, training_set=(X_train_centered, y_train), validation_set=(X_valid_centered, y_valid),
-          initialize=True, random_seed=123)
+    train(sess, training_set=(X_train_centered, y_train), validation_set=(X_valid_centered, y_valid), initialize=True, random_seed=123)
     save(saver, sess, epoch=20)
 
 ## Calculate prediction accuracy on test set
 ## restoring the saved model
 del g
-'''
 
-''' Create a new graphand build the model'''
+''' Create a new graph and build the model'''
 g2 = tf.Graph()
 with g2.as_default():
     tf.set_random_seed(random_seed)
@@ -262,4 +259,5 @@ with g2.as_default():
 with tf.Session(graph=g2) as sess:
     load(saver, sess, epoch=20, path='./model/')
     preds = predict(sess, X_test_centered, return_proba=False)
-    print('Test Accuracy: %.3f%%' % (100*np.sum(preds == y_test)/len(y_test)))
+    print
+    print('Test Accuracy: %.3f%%' % (100*np.sum(preds == y_test)/len(y_test)))
